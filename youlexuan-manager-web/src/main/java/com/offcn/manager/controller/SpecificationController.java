@@ -3,12 +3,15 @@ package com.offcn.manager.controller;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.offcn.entity.PageResult;
 import com.offcn.entity.Result;
+import com.offcn.group.Specification;
 import com.offcn.pojo.TbSpecification;
 import com.offcn.sellergoods.service.SpecificationService;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLOutput;
 import java.util.List;
 
 /**
@@ -48,7 +51,7 @@ public class SpecificationController {
 	 * @return
 	 */
 	@RequestMapping("/add")
-	public Result add(@RequestBody TbSpecification specification){
+	public Result add(@RequestBody Specification specification){
 		try {
 			specificationService.add(specification);
 			return new Result(true, "增加成功");
@@ -64,7 +67,7 @@ public class SpecificationController {
 	 * @return
 	 */
 	@RequestMapping("/update")
-	public Result update(@RequestBody TbSpecification specification){
+	public Result update(@RequestBody Specification specification){
 		try {
 			specificationService.update(specification);
 			return new Result(true, "修改成功");
@@ -80,7 +83,7 @@ public class SpecificationController {
 	 * @return
 	 */
 	@RequestMapping("/findOne")
-	public TbSpecification findOne(Long id){
+	public Specification findOne(Long id){
 		return specificationService.findOne(id);		
 	}
 	
@@ -102,7 +105,7 @@ public class SpecificationController {
 	
 		/**
 	 * 查询+分页
-	 * @param brand
+	 * @param
 	 * @param page
 	 * @param rows
 	 * @return

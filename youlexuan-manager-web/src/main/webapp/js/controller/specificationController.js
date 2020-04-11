@@ -1,88 +1,98 @@
- //控制层 
-app.controller('specificationController' ,function($scope,$controller   ,specificationService){	
-	
+ //控制层
+app.controller('specificationController' ,function($scope,$controller   ,specificationService){
+
 	$controller('baseController',{$scope:$scope});//继承
-	
-    //读取列表数据绑定到表单中  
+
+    //读取列表数据绑定到表单中
 	$scope.findAll=function(){
 		specificationService.findAll().success(
 			function(response){
 				$scope.list=response;
-			}			
+			}
 		);
-	}    
-	
+	}
+
 	//分页
-	$scope.findPage=function(page,rows){			
+	$scope.findPage=function(page,rows){
 		specificationService.findPage(page,rows).success(
 			function(response){
-				$scope.list=response.rows;	
+				$scope.list=response.rows;
 				$scope.paginationConf.totalItems=response.total;//更新总记录数
-			}			
+			}
 		);
 	}
-	
-	//查询实体 
-	$scope.findOne=function(id){				
+
+	//查询实体
+	$scope.findOne=function(id){
 		specificationService.findOne(id).success(
 			function(response){
-				$scope.entity= response;					
+				$scope.entity= response;
 			}
-		);				
+		);
 	}
-	
-	//保存 
-	$scope.save=function(){				
-		var serviceObject;//服务层对象  				
-		if($scope.entity.id!=null){//如果有ID
-			serviceObject=specificationService.update( $scope.entity ); //修改  
+
+	//保存
+	$scope.save=function(){
+		var serviceObject;//服务层对象
+		if($scope.entity.specification.id!=null){//如果有ID  ---判断是组合实体类中的规格的entity.规格.id
+			serviceObject=specificationService.update( $scope.entity ); //修改
 		}else{
-			serviceObject=specificationService.add( $scope.entity  );//增加 
-		}				
+			serviceObject=specificationService.add( $scope.entity  );//增加
+		}
 		serviceObject.success(
 			function(response){
 				if(response.success){
-					//重新查询 
+					//重新查询
 		        	$scope.reloadList();//重新加载
 				}else{
 					alert(response.message);
 				}
-			}		
-		);				
+			}
+		);
 	}
-	
-	 
-	//批量删除 
-	$scope.dele=function(){			
-		//获取选中的复选框			
+
+
+	//批量删除
+	$scope.dele=function(){
+		//获取选中的复选框
 		specificationService.dele( $scope.selectIds ).success(
 			function(response){
 				if(response.success){
 					$scope.reloadList();//刷新列表
 					$scope.selectIds=[];
-				}						
-			}		
-		);				
-	}
-	
-	$scope.searchEntity={};//定义搜索对象 
-	
-	//搜索
-	$scope.search=function(page,rows){			
-		specificationService.search(page,rows,$scope.searchEntity).success(
-			function(response){
-				$scope.list=response.rows;	
-				$scope.paginationConf.totalItems=response.total;//更新总记录数
-			}			
+				}
+			}
 		);
 	}
 
-	//初始化一个前端的规格的组合实体类的js的json的对象，前端的
-	//改对象什么时候发生变化：增加(点击新增规格选型)删除
+	$scope.searchEntity={};//定义搜索对象
+
+	//搜索
+	$scope.search=function(page,rows){
+		specificationService.search(page,rows,$scope.searchEntity).success(
+			function(response){
+				$scope.list=response.rows;
+				$scope.paginationConf.totalItems=response.total;//更新总记录数
+			}
+		);}
+
+
+
+	//初始化一个前端的规格的组合实体类的js的json的对象,前端的一对多
+	//改对象什么时候发生变化:增加(点击"新增规格选项"),删除(点击"删除"对应的索引的行)
+	//前台的组合实体类
 	$scope.entity={specification:{},specificationOptionList:[{}]};
 
-	$scope.addTableRow=function () {
-		$scope.entity.push({});
-	}
 
-});	
+	//新增规格选项行
+	$scope.addTableRow=function () {
+		//当用户点击 新增规格选项 按钮时候，就在 规格选项数组插入一个空的json对象
+		$scope.entity.specificationOptionList.push({});
+    }
+
+    //删除指定规格选项行
+	$scope.deleteTableRow=function (index) {
+		$scope.entity.specificationOptionList.splice(index,1);
+    }
+
+});

@@ -4,10 +4,14 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.offcn.entity.PageResult;
+import com.offcn.group.Specification;
 import com.offcn.mapper.TbSpecificationMapper;
+import com.offcn.mapper.TbSpecificationOptionMapper;
 import com.offcn.pojo.TbSpecification;
 import com.offcn.pojo.TbSpecificationExample;
 import com.offcn.pojo.TbSpecificationExample.Criteria;
+import com.offcn.pojo.TbSpecificationOption;
+import com.offcn.pojo.TbSpecificationOptionExample;
 import com.offcn.sellergoods.service.SpecificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -23,7 +27,9 @@ public class SpecificationServiceImpl implements SpecificationService {
 
 	@Autowired
 	private TbSpecificationMapper specificationMapper;
-	
+
+	@Autowired
+	private TbSpecificationOptionMapper specificationOptionMapper;
 	/**
 	 * 查询全部
 	 */
@@ -46,17 +52,56 @@ public class SpecificationServiceImpl implements SpecificationService {
 	 * 增加
 	 */
 	@Override
-	public void add(TbSpecification specification) {
-		specificationMapper.insert(specification);		
+	public void add(Specification specification) {
+
+		//添加1 设置insert时的id返回
+		specificationMapper.insert(specification.getSpecification());
+		System.out.println(specification);
+		//添加多
+		List<TbSpecificationOption> specificationOptionsList = specification.getSpecificationOptionList();
+
+		for (TbSpecificationOption tbSpecificationOption : specificationOptionsList) {
+
+			//本次插入的规格id获取到set到规格项中,直接从规格中获取,但是默认插入是不返回id的。需要从mapper中设置
+			tbSpecificationOption.setSpecId(specification.getSpecification().getId());
+			specificationOptionMapper.insert(tbSpecificationOption);
+		}
+
+
 	}
 
-	
+
+
 	/**
 	 * 修改
 	 */
 	@Override
-	public void update(TbSpecification specification){
-		specificationMapper.updateByPrimaryKey(specification);
+	public void update(Specification specification){
+
+		specificationMapper.updateByPrimaryKey(specification.getSpecification());
+
+		//修改多,先全部删除，再添加
+		//1.根据规格id删除所有
+
+	 TbSpecificationOptionExample example =new TbSpecificationOptionExample();
+		TbSpecificationOptionExample.Criteria criteria = example.createCriteria();
+		criteria.andSpecIdEqualTo(specification.getSpecification().getId());
+
+		specificationOptionMapper.deleteByExample(example);
+
+		//2.插入
+		//添加多
+		List<TbSpecificationOption> specificationOptionsList = specification.getSpecificationOptionList();
+
+		for (TbSpecificationOption tbSpecificationOption : specificationOptionsList) {
+
+			//本次插入的规格id获取到set到规格项中,直接从规格中获取,但是默认插入是不返回id的。需要从mapper中设置
+			tbSpecificationOption.setSpecId(specification.getSpecification().getId());
+			specificationOptionMapper.insert(tbSpecificationOption);
+		}
+
+
+
 	}	
 	
 	/**
@@ -65,8 +110,23 @@ public class SpecificationServiceImpl implements SpecificationService {
 	 * @return
 	 */
 	@Override
-	public TbSpecification findOne(Long id){
-		return specificationMapper.selectByPrimaryKey(id);
+	public Specification findOne(Long id){
+
+		Specification specification = new Specification();//组合实体类
+		specification.setSpecification(specificationMapper.selectByPrimaryKey(id));//查规格
+			//select * from tb_specification where id =?
+
+		TbSpecificationOptionExample example = new TbSpecificationOptionExample();
+		TbSpecificationOptionExample.Criteria criteria = example.createCriteria();
+		criteria.andSpecIdEqualTo(id);
+
+		List<TbSpecificationOption> specificationOptionList = specificationOptionMapper.selectByExample(example);
+		//select * from tb_specification_option where spec_id = 39
+
+		specification.setSpecificationOptionList(specificationOptionList);
+
+		return specification;
+
 	}
 
 	/**
@@ -75,7 +135,17 @@ public class SpecificationServiceImpl implements SpecificationService {
 	@Override
 	public void delete(Long[] ids) {
 		for(Long id:ids){
-			specificationMapper.deleteByPrimaryKey(id);
+			specificationMapper.deleteByPrimaryKey(id);//删1
+
+			//删多
+			//修改多,先全部删除，再添加
+			//1.根据规格id删除所有
+
+			TbSpecificationOptionExample example =new TbSpecificationOptionExample();
+			TbSpecificationOptionExample.Criteria criteria = example.createCriteria();
+			criteria.andSpecIdEqualTo(id);
+
+			specificationOptionMapper.deleteByExample(example);
 		}		
 	}
 	
